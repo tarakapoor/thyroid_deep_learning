@@ -1,6 +1,5 @@
 import mobilenet_preprocess
 
-
 print("\nTHYROID DATASET\n")
 import pandas as pd
 from PIL import Image
@@ -94,13 +93,10 @@ def load_datasets_new(args, phase, cv_phase, allimgs, frametype):
     #if 3 images in a row from same patient, stack them (instead of rgb channels)
     for ind in range(len(cur_imgs)):
         if(not (cur_annot_ids[ind] in distinct_patient_ids)):
-            #if(not (ind == 0)):
-                #print(cur_annot_ids[ind-1], "patient has", patientframenum-1, "frames")
             distinct_patient_ids.append(cur_annot_ids[ind])
             patientframenum = 1
         cur_frame_num.append(patientframenum) #add index of first image in current frame stack within patient to list for order
         patientframenum += 1
-    #print(distinct_patient_ids[len(distinct_patient_ids)-1], "patient has", patientframenum-1, "frames")
     print(len(cur_imgs), len(cur_labels), len(cur_annot_ids), len(cur_frame_num))
 
     
@@ -112,7 +108,6 @@ def load_datasets_new(args, phase, cv_phase, allimgs, frametype):
     
     distinct_patient_ids = []
     dist = 10
-    #for t in range(0, len(train_imgs) - 3, 3): #intervals of 3
     t = 0
     
     print("about to stack!")
@@ -140,7 +135,6 @@ def load_datasets_new(args, phase, cv_phase, allimgs, frametype):
                 annot_id = cur_annot_ids[t]
                 #last index of this patient id in the list of ids
                 last_id = len(cur_annot_ids) - cur_annot_ids[::-1].index(annot_id) - 1
-                #print("num in this patient", last_id - t)
                 dist = (last_id - t) // 3
                 distinct_patient_ids.append(cur_annot_ids[t])
                 print("PATIENT", cur_annot_ids[t], "num frames:", last_id-t)
@@ -155,7 +149,6 @@ def load_datasets_new(args, phase, cv_phase, allimgs, frametype):
 
                     cur_frame_num_stack.append(cur_frame_num[t]) #add index of first image in current frame stack within patient to list for order
 
-                    #if(train_labels[t] != train_labels[t+1] or train_labels[t] != train_labels[t+2]):
                     if(cur_labels[t] != cur_labels[t+dist] or cur_labels[t] != cur_labels[t+(2*dist)]):
                         print("inconsistent labels in train group of 3 images!")
                         print("t:", t, "dist:", dist, "last id", last_id, "cur labels:", cur_labels[t], cur_annot_ids[t], cur_labels[t+(2*dist)], cur_annot_ids[t+(2*dist)])
@@ -204,8 +197,6 @@ def load_datasets_new(args, phase, cv_phase, allimgs, frametype):
         f=open(args.project_home_dir + "samplesweight.csv",'w', newline ='\n')
         count = 0
         for s in zip(samples_weight):
-            #if(count%500 == 0):
-                #print("sample weight", s)
             count += 1
             f.write(str(s[0])+",")
         f.close()
@@ -345,8 +336,6 @@ def load_datasets_single_frame(args, phase, cv_phase, allimgs, largestpatinds):
         f=open(args.project_home_dir + "samplesweight.csv",'w', newline ='\n')
         count = 0
         for s in zip(samples_weight):
-            #if(count%500 == 0):
-                #print(s, s[0])
             count += 1
             f.write(str(s[0])+",")
         f.close()
