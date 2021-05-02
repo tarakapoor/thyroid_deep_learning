@@ -62,7 +62,6 @@ def transform_and_crop_largest(imgs, masks, pats):
             firstinpat = True
             if(len(newpats) > 1):
                 biggestinpat[patmaxareaind] = 1
-                #print("last patient", pats[im-1], "(check)", pats[patmaxareaind], "max area", patmaxarea, "at ind", patmaxareaind)
             
             patmaxarea = 0
             patmaxareaind = 0
@@ -82,7 +81,7 @@ def transform_and_crop_largest(imgs, masks, pats):
         if(w*h >= patmaxarea): #if largest, update patientmaxarea variables
             patmaxareaind = im
             patmaxarea = w*h
-            #print("in patient", pats[im], "biggest area so far", patmaxarea,"index", im)
+            #print("in patient", pats[im], "largest area so far", patmaxarea, "index", im)
         
         new_im = new_im.resize((224, 224)) #resize with PIL
         
