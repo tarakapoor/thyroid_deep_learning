@@ -85,14 +85,14 @@ def train_model(args):
     epoch_aurocs = []
 
 
-    #default for early stopping
+    #default for early stopping; local variables
     min_val_loss = 10
     prev_val_loss = 10
     epochs_no_improve = 0
     early_stop = False
     min_epoch = 0
 
-    #max epochs
+    #max epochs to train for
     if(config.trainval):
         config.num_epochs = config.best_epoch+2
     else:
@@ -114,7 +114,7 @@ def train_model(args):
         model.classifier._modules['1'] = nn.Linear(1280, 256)
         model.classifier._modules['2'] = nn.Linear(256, 2)
 
-    print(config.modeltype, "model:")#, model.classifier)
+    print(config.modeltype, "model:")
 
     #FREEZE SOME LAYERS
     ct = 0
