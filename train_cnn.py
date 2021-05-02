@@ -25,7 +25,7 @@ from sklearn.metrics import roc_auc_score, accuracy_score, roc_curve
 
 
 def roc_auc_score_FIXED(y_true, y_pred):
-    if (len(np.unique(y_true)) == 1): # bug in roc_auc_score
+    if (len(np.unique(y_true)) == 1): # only positives or only negatives in the sample; AUROC is not defined in this case
         return accuracy_score(y_true, np.rint(y_pred))
     return roc_auc_score(y_true, y_pred)
 
