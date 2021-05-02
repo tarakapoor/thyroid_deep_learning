@@ -120,13 +120,11 @@ def train_model(args):
     ct = 0
     xfrozen = 0
     for child in model.children():
-        #print("CHILD:",child)
         for kid in child.children():
-            #freeze first xfrozen layers:
+            #freeze first xfrozen # of layers:
             if (ct < xfrozen):
                 for param in kid.parameters():
                     param.requires_grad = False
-                #print("KID frozen", kid)
             ct += 1
     print('trainable parameters', count_parameters(model))
     
@@ -146,15 +144,15 @@ def train_model(args):
     model_setup.setup_model(model, "train", config.cvphase, args.model_dir, args.pretrained_dir, args)
     print(config.modeltype, "Model Construction Complete")
 
-
-    #adding weights to loss function because of imbalance in dataset
+    #loss function
     criterion = nn.CrossEntropyLoss().to(device)
-        
+    #optimizer
     if(config.weightdecay):
         optimizer = optim.SGD(model.parameters(), lr=config.lr, weight_decay = config.weightdecval, momentum=0.9)
     else:
         optimizer = optim.SGD(model.parameters(), lr=config.lr, momentum=0.9)
 
+    #get weights for weighted data sampler
     if(config.weighted_sampler):
         rowcount = 0
         with open(args.project_home_dir + "samplesweight.csv", newline='') as infh:
@@ -163,15 +161,11 @@ def train_model(args):
             rowcount = 0
             samples_weight = []
             for row in reader:
-                #print(row)
                 del row[-1] #empty space
                 row = np.array(row).astype(np.float)
                 for x in row:
                     samples_weight.append(x)
             print(len(samples_weight))
-    
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, len(samples_weight), eta_min=0.00001)    
-    
     
     #load DATA
     if(not config.trainval):
@@ -182,11 +176,12 @@ def train_model(args):
         trainlen = len(trainval_set)
     val_set = mobilenet_dataset.DatasetThyroid3StackedNew(args, "val", config.cvphase, config.frametype, transform=transformNorm)
             
-    
+    #learning rate scheduler
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, len(samples_weight), eta_min=0.00001)    
+
     ####START TRAINING!!!!
     for epoch in range(config.num_epochs):
-
-        #DOING THIS BY EPOCH FOR AUROC
+        #OBTAINING LABELS and OUTPUTS BY EPOCH FOR AUROC
         all_labels = []
         all_probs_ones = []
         all_patients = []
@@ -224,18 +219,18 @@ def train_model(args):
                 print('Loading total', trainlen, 'training images--------')
             print('Loading total', len(val_set), 'val images--------')
 
-        
         #UPDATE LEARNING RATE ONCE PER EPOCH
         if(epoch>0 and (epoch%10 == 0)):
             scheduler.step()
-            print("Learning rate at epoch", epoch, "is:", optimizer.param_groups[0]['lr'])#, "aka", scheduler.get_last_lr())
+            print("Learning rate at epoch", epoch, "is:", optimizer.param_groups[0]['lr'])
         else:
             print("Learning rate at epoch", epoch, "is:", config.lr, "aka", optimizer.param_groups[0]['lr'])
         lrs.append(optimizer.param_groups[0]['lr'])
         
-        #this calls getitem (for each i in train_set_loader)
+        
         print("num iterations of train:", len(train_set_loader))
         model.train() #train mode
+        #this calls getitem (for each i in train_set_loader)
         for i, data in enumerate(train_set_loader):
             inputs = data['input'].to(device)
             labels = data['label'].to(device)
@@ -258,7 +253,6 @@ def train_model(args):
             except:
                 print("1train loss failed", inputs.shape, outputs.shape, labels.shape)
             try:
-                #loss.backward()
                 f_loss.backward()
                 optimizer.step()
 
@@ -286,7 +280,7 @@ def train_model(args):
 
             # Total number of labels
             try:
-                traintotal += len(labels.cpu())#tlabels.size(0)
+                traintotal += len(labels.cpu())
             except:
                 print(i, "index len 0 trainlabels; input shape", np.shape(inputs.cpu().numpy()))
 
@@ -365,15 +359,12 @@ def train_model(args):
 
                         # Total number of labels
                         try:
-                            total += len(tlabels.cpu())#tlabels.size(0)
+                            total += len(tlabels.cpu())
                         except:
                             print(j, "index len 0 tlabels; input shape", np.shape(tinputs.cpu().numpy()))
 
-                        #print("total", total)
                         accuracy = 100 * correct // total
-
                         #end of torch no grad
-
 
                 #print statistics
                 message = 'epoch: %d, iters: %d, time: %.3f, with loss: %.3f, focal weighted loss: %.5f, val loss: %.3f, val focal weighted loss: %.5f, train_acc: %.4f, val accuracy: %.3f' % (
@@ -513,21 +504,6 @@ def train_model(args):
         cur_pat_labels = []
         sum_pat_pred = 0
         
-        
-#     if(not args.trainval): #ONLY train phase get threshold
-#         fpr, tpr, thresholds = roc_curve(patientlabels, patient_ave_preds)
-#         # get the best threshold
-#         J = tpr - fpr
-#         J2 = (2*tpr) - fpr
-#         J3 = tpr - (2*fpr)
-#         ix = argmax(J) #index of max value
-#         ix2 = argmax(J2)
-#         ix3 = argmax(J3)
-#         args.best_thresh = thresholds[ix]
-#         args.best_thresh_2tpr = thresholds[ix2]
-#         args.best_thresh_2fpr = thresholds[ix3]
-#         print('Best Threshold=%f, weighted tpr Threshold=%f, weighted fpr Threshold=%f' % (args.best_thresh, args.best_thresh_2tpr, args.best_thresh_2fpr),)
-#         print('index 1=%f, weighted tpr index=%f, weighted fpr index=%f' % (ix, ix2, ix3),)
 
     print("\nall average patient predictions and their labels:")
     for hh in range(len(patientlabels)):
