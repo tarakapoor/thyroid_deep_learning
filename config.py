@@ -1,3 +1,5 @@
+#config file: not to be edited by user
+
 #permanents
 batchSize = 16
 lr = 0.001
@@ -12,7 +14,7 @@ n_epochs_stop = 5 #how many epochs of no-improve validation loss before early st
 floss_alpha = 0.9 #alpha for focal loss
 floss_gamma = 2.4 #gamma for focal loss
 
-#updating
+#updated by model
 phase = "train"
 cvphase = 0
 trainval = False
