@@ -116,6 +116,7 @@ def calc_test_stats(distinct_patients, patientlabels, patient_ave_preds):
 
     
 
+
 #run after testing full model
 def analyze_test_outputs(savefilename, modeltype): #modeltype cnn or transformer
     #ANALYSIS OF RESULTS
@@ -125,7 +126,7 @@ def analyze_test_outputs(savefilename, modeltype): #modeltype cnn or transformer
     test_all_patients = []
     test_all_probs_ones = []
     rowcount = 0
-    testsaveallfile = savefilename#"test_all_outs" + str(config.cvphase) + ".csv"
+    testsaveallfile = savefilename
     with open(testsaveallfile, newline='') as infh:
         print("opened csv for test outputs")
         reader = csv.reader(infh)
@@ -141,11 +142,9 @@ def analyze_test_outputs(savefilename, modeltype): #modeltype cnn or transformer
     test_all_patients.pop(0)
     test_all_labels.pop(0)
     test_all_probs_ones.pop(0)
-    #test_all_patients = np.array(test_all_patients, dtype=np.float32)
     test_all_labels = np.array(test_all_labels, dtype=np.float32)
     test_all_probs_ones = np.array(test_all_probs_ones, dtype=np.float32)
 
-    #print(test_all_patients)
 
     testpatients = []
     for p in range(len(test_all_patients)):
@@ -326,8 +325,7 @@ def bootstrap_auc(y_true, y_pred, n_bootstraps=2000, rng_seed=42):
         y_pred_ind = [y_pred[ind] for ind in indices]
         
         if len(np.unique(y_true_ind)) < 2:
-            # We need at least one positive and one negative sample for AUROC
-            # to be defined: reject the sample
+            # We need at least one positive and one negative sample for AUROC to be defined: reject the sample
             continue
         score = roc_auc_score(y_true_ind, y_pred_ind)
         bootstrapped_scores.append(score)
