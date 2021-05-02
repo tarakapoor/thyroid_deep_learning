@@ -1,6 +1,5 @@
-import cnn_data_augmentations #augmentations are not functions so not sure what this is doing
-#import mobilenet_preprocess
-from mobilenet_dataset import *
+import cnn_data_augmentations
+import mobilenet_dataset
 import model_setup #has setup_model and save_networks functions
 from cnn_data_augmentations import * #augmentations are not functions so not sure what this is doing
 import config #config.py
@@ -27,7 +26,7 @@ def test_model(args, min_epoch):
     ttotal = 0
     tcorrect = 0
     
-    test_set = DatasetThyroid3StackedNew(args, "test", config.cvphase, config.frametype, transform=transformNorm)
+    test_set = mobilenet_dataset.DatasetThyroid3StackedNew(args, "test", config.cvphase, config.frametype, transform=transformNorm)
     
     if(config.modeltype == "mobilenet"):
         tmodel = models.mobilenet_v2(pretrained=True)
@@ -44,7 +43,7 @@ def test_model(args, min_epoch):
     for param in tmodel.parameters():
         param.requires_grad = False
 
-    #modify actual last linear layer in the mobilenet
+    #modify actual last fc layer in the mobilenet
     tmodel.classifier._modules['1'] = nn.Linear(1280, 256)
     tmodel.classifier._modules['2'] = nn.Linear(256, 2)
     
