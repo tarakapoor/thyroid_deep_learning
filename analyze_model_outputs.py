@@ -1,5 +1,3 @@
-import config #config.py
-
 import sklearn
 from sklearn import metrics
 from sklearn.metrics import roc_auc_score, accuracy_score, roc_curve
@@ -14,10 +12,18 @@ import matplotlib.image as mpimg
 import numpy as np
 import csv
 
+from numpy import sqrt
+from numpy import argmax
+
+from main import configread, configwrite
+
+
 def plot_test_stats(losses, f_losses, losses_val, f_losses_val, epoch_aurocs, patientlabels, patient_ave_preds):
+    config = configread()
+
     epochs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     
-    if(config.trainval):
+    if(config['trainval']):
         print("train losses (4/5 data crossvalidation)")
     else:
         print("train losses 3/5 data")
@@ -54,7 +60,7 @@ def plot_test_stats(losses, f_losses, losses_val, f_losses_val, epoch_aurocs, pa
     plt.show()
     
     #########
-    if (not config.trainval): #thresholds
+    if (not config['trainval']): #thresholds from first train phase
         x = [0, 0.01, 0.02, 0.03, 0.09, 0.16, 0.116, 0.126, 0.2, .35, 0.351, 0.352, 0.353, 0.39, 0.3916, 0.392, .4, .41, .42, .43, 0.5, 0.6, 0.6, 0.61, 0.62, 0.63, 0.64, 0.65, 0.66, 0.67, 0.671, 0.672, 0.673, 0.68, 0.681, 0.682, 0.8, 1.0]
         fpr, tpr, thresholds = roc_curve(patientlabels, patient_ave_preds)
 
@@ -75,8 +81,18 @@ def plot_test_stats(losses, f_losses, losses_val, f_losses_val, epoch_aurocs, pa
 
         best = argmax(tpr - fpr)
         thresh = thresholds[best]
-        print("best", best, thresholds[best])
-        print("best gmean", bestgmean, gmeanthresh)
+        config = configwrite('best_thresh', thresh)
+        
+        best2tpr = argmax(2*tpr - fpr)
+        thresh2tpr = thresholds[best2tpr]
+        config = configwrite('best_thresh_2tpr', thresh2tpr)
+        
+        best2fpr = argmax(tpr - 2*fpr)
+        thresh2fpr = thresholds[best2fpr]
+        config = configwrite('best_thresh_2fpr', thresh2fpr)
+        
+        best = argmax(tpr - fpr)
+        thresh = thresholds[best]
 
         plt.xlabel("Threshold")
         tprfpr, = plt.plot(thresholds, tpr - fpr, label="True Positives - False Positives")
@@ -85,12 +101,14 @@ def plot_test_stats(losses, f_losses, losses_val, f_losses_val, epoch_aurocs, pa
         print("VALIDATION thresholds")
         plt.show()
         
-    print("thresholds:", config.best_thresh, config.best_thresh_2fpr)
+    print("thresholds: unweighted and fpr weighted and tpr weighted", config['best_thresh'], config['best_thresh_2fpr'], config['best_thresh_2tpr'])
     
     
     
 
 def calc_test_stats(distinct_patients, patientlabels, patient_ave_preds):
+    config = configread()
+
     #calculate auroc based on average score for each patient
     patientwise_auroc = roc_auc_score(patientlabels, patient_ave_preds)
     print("\nTotal AUROC by patient-wise average predictions:", patientwise_auroc)
@@ -98,35 +116,36 @@ def calc_test_stats(distinct_patients, patientlabels, patient_ave_preds):
     #accuracy based on threshold predictions
     threshlabels = []
     for pp in range(len(patient_ave_preds)):
-        if (patient_ave_preds[pp] >= config.best_thresh):
+        if (patient_ave_preds[pp] >= config['best_thresh']):
             print(distinct_patients[pp], patient_ave_preds[pp])
             threshlabels.append("1")
         else:
             threshlabels.append("0")
 
     print("\n\nTHRESHOLD PREDICTIONS VS. LABELS!")
-    print("threshold probability:", config.best_thresh)
+    print("threshold probability:", config['best_thresh'])
     for pp in range(len(patientlabels)):
         print("PATIENT:", distinct_patients[pp], "prediction:", threshlabels[pp], "label:", patientlabels[pp], "prob:", patient_ave_preds[pp])
 
     plt.scatter(patientlabels, patient_ave_preds)
     plt.xlabel("Label")
     plt.ylabel("probability")
-    print('done, best epoch:', config.best_epoch)
+    print('done, best epoch:', config['best_epoch'])
 
     
 
-
 #run after testing full model
 def analyze_test_outputs(savefilename, modeltype): #modeltype cnn or transformer
+    config = configread()
+
     #ANALYSIS OF RESULTS
-    print("CV PHASE", config.cvphase)
+    print("CV PHASE", config['cvphase'])
 
     test_all_labels = []
     test_all_patients = []
     test_all_probs_ones = []
     rowcount = 0
-    testsaveallfile = savefilename
+    testsaveallfile = savefilename#"test_all_outs" + str(config['cvphase) + ".csv"
     with open(testsaveallfile, newline='') as infh:
         print("opened csv for test outputs")
         reader = csv.reader(infh)
@@ -172,8 +191,8 @@ def analyze_test_outputs(savefilename, modeltype): #modeltype cnn or transformer
         testcur_pat_labels = []
         testsum_pat_pred = 0
 
-    print('thresh %.8f\nthresh fpr weighted %.5f\nthresh tpr weighted %.8f' % (config.best_thresh, config.best_thresh_2fpr, config.best_thresh_2tpr))
-    thresh = config.best_thresh_2fpr #using false positive threshold now for confusion matrix
+    print('thresh %.8f\nthresh fpr weighted %.5f\nthresh tpr weighted %.8f' % (config['best_thresh'], config['best_thresh_2fpr'], config['best_thresh_2tpr']))
+    thresh = config['best_thresh_2fpr'] #using false positive threshold now for confusion matrix
     print('CHOSEN THRESHOLD: %.7f' % (thresh))
     
     acc = []
@@ -197,7 +216,7 @@ def analyze_test_outputs(savefilename, modeltype): #modeltype cnn or transformer
     threshlabelstpr = []
     threshlabeltpr = 0
     for pp in range(len(testpatient_ave_preds)):
-        if (testpatient_ave_preds[pp] >= config.best_thresh_2tpr):
+        if (testpatient_ave_preds[pp] >= config['best_thresh_2tpr']):
             threshlabeltpr = 1
         else:
             threshlabeltpr = 0
@@ -212,7 +231,7 @@ def analyze_test_outputs(savefilename, modeltype): #modeltype cnn or transformer
     threshlabelsfpr = []
     threshlabelfpr = 0
     for pp in range(len(testpatient_ave_preds)):
-        if (testpatient_ave_preds[pp] >= config.best_thresh_2fpr):
+        if (testpatient_ave_preds[pp] >= config['best_thresh_2fpr']):
             threshlabelfpr = 1
         else:
             threshlabelfpr = 0
@@ -289,12 +308,12 @@ def analyze_test_outputs(savefilename, modeltype): #modeltype cnn or transformer
 
     
     #WRITE OUTPUT PROBABILITIES, LABELS, and THRESHOLD PREDICTIONS BY PATIENT TO CSV FILE
-    print("writing outputs to csv")
-    testsavefile = "saved_test_" + str(modeltype) + str(config.cvphase) + "_adj.csv"
+    testsavefile = "saved_test_" + str(modeltype) + str(config['cvphase']) + "_adj.csv"
+    print("writing outputs to csv", testsavefile)
     print("threshold", thresh)
     f=open(testsavefile,'w', newline ='\n')
     count = 0
-    f.write("annot_id, label, probability, prediction from thresh "+str(config.best_thresh)+", prediction from thresh 2tpr "+str(config.best_thresh_2tpr)+", prediction from thresh 2fpr "+str(config.best_thresh_2fpr)+"\n") #titles
+    f.write("annot_id, label, probability, prediction from thresh "+str(config['best_thresh'])+", prediction from thresh 2tpr "+str(config['best_thresh_2tpr'])+", prediction from thresh 2fpr "+str(config['best_thresh_2fpr'])+"\n") #titles
 
     for i,l,j,k,m,n in zip(testpatients, testpatientlabels, testpatient_ave_preds, threshlabels, threshlabelstpr, threshlabelsfpr):
         if (count % 200 == 0):
@@ -325,7 +344,8 @@ def bootstrap_auc(y_true, y_pred, n_bootstraps=2000, rng_seed=42):
         y_pred_ind = [y_pred[ind] for ind in indices]
         
         if len(np.unique(y_true_ind)) < 2:
-            # We need at least one positive and one negative sample for AUROC to be defined: reject the sample
+            # We need at least one positive and one negative sample for AUROC
+            # to be defined: reject the sample
             continue
         score = roc_auc_score(y_true_ind, y_pred_ind)
         bootstrapped_scores.append(score)
