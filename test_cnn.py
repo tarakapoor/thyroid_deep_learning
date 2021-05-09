@@ -1,8 +1,8 @@
-import cnn_data_augmentations
-import mobilenet_dataset
+from mobilenet_dataset import *
 import model_setup #has setup_model and save_networks functions
-from cnn_data_augmentations import * #augmentations are not functions so not sure what this is doing
-import config #config.py
+from cnn_data_augmentations import *
+
+from main import configwrite, configread
 
 import numpy as np
 import os
@@ -22,37 +22,40 @@ from sklearn import metrics
 from sklearn.metrics import roc_auc_score, accuracy_score, roc_curve
 
 
-def test_model(args, min_epoch):
+def test_model(imgpath, maskpath, labelpath, project_home_dir, min_epoch):
+    
+    config = configread()
+    
     ttotal = 0
     tcorrect = 0
     
-    test_set = mobilenet_dataset.DatasetThyroid3StackedNew(args, "test", config.cvphase, config.frametype, transform=transformNorm)
+    test_set = DatasetThyroid3StackedNew(imgpath, maskpath, labelpath, project_home_dir, "test", config['cvphase'], config['frametype'], transform=transformNorm)
     
-    if(config.modeltype == "mobilenet"):
+    if(config['modeltype'] == "mobilenet"):
         tmodel = models.mobilenet_v2(pretrained=True)
-    config.phase = "test"
+    config = configwrite('phase', "test")
     print(min_epoch)
 
     #make sure using trainval model
-    args.model_dir = config.modeltype + '_thyroid_weighted_focal_extralinear_adj'
-    args.model_path = args.project_home_dir + 'model/' + args.model_dir + '/'
+    model_dir = config['modeltype'] + '_thyroid_weighted_focal_extralinear_adj'
+    model_path = project_home_dir + 'model/' + model_dir + '/'
     
-    print("pretrained dir:", args.model_dir)
-    args.pretrained_dir = args.model_dir
+    print("pretrained dir:", model_dir)
+    pretrained_dir = model_dir
 
     for param in tmodel.parameters():
         param.requires_grad = False
 
-    #modify actual last fc layer in the mobilenet
+    #modify actual last linear layer in the mobilenet
     tmodel.classifier._modules['1'] = nn.Linear(1280, 256)
     tmodel.classifier._modules['2'] = nn.Linear(256, 2)
     
     #moves to gpu
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     tmodel = tmodel.to(device)
-    model_setup.setup_model(tmodel, "test", config.cvphase, args.model_dir, args.pretrained_dir, args)
+    model_setup.setup_model(tmodel, "test", config['cvphase'], model_dir, pretrained_dir, project_home_dir, min_epoch)
 
-    test_set_loader = DataLoader(dataset=test_set, num_workers=0, batch_size=config.batchSize, shuffle=False)
+    test_set_loader = DataLoader(dataset=test_set, num_workers=0, batch_size=config['batchSize'], shuffle=False)
 
     test_all_labels = []
     test_all_probs_ones = []
@@ -76,7 +79,7 @@ def test_model(args, min_epoch):
             labels = labels.squeeze()
 
             #apply sigmoid or softmax
-            if (config.probFunc == 'Softmax'):
+            if (config['probFunc'] == 'Softmax'):
                 sf = nn.Softmax(dim=1) #makes items in a row add to 1; dim = 0 makes items in a column add to 1
                 outputs = sf(outputs)
                 if (i == 10):
@@ -130,7 +133,7 @@ def test_model(args, min_epoch):
             accuracy = 100 * tcorrect // ttotal
             
     #WRITE OUTPUT PROBABILITIES, LABELS for EVERY INSTANCE to CSV FILE
-    testsaveallfile = "cnn_test_all_outs" + str(config.cvphase) + ".csv"
+    testsaveallfile = "cnn_test_all_outs" + str(config['cvphase']) + ".csv"
     f=open(testsaveallfile,'w', newline ='\n')
     count = 0
     f.write("annot_id, label, probability\n") #titles
