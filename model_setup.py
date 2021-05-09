@@ -1,17 +1,15 @@
 import os
 import torch
 
-import config
-
-def setup_model(net, phase, cvphase, model_dir, pretrained_dir, args):
+def setup_model(net, phase, cvphase, model_dir, pretrained_dir, project_home_dir, best_epoch):
     print("setting up model")
     
-    args.model_path = args.project_home_dir + 'model/' + model_dir + '/'
-    if not os.path.exists(args.model_path):
-        os.makedirs(args.model_path)
-        print('Make the folder', args.model_path, 'to save model---------\n')
+    model_path = project_home_dir + 'model/' + model_dir + '/'
+    if not os.path.exists(model_path):
+        os.makedirs(model_path)
+        print('Make the folder', model_path, 'to save model---------\n')
     if phase == 'test':
-        load_path = args.project_home_dir + 'model/' + pretrained_dir + '/' + pretrained_dir +'_cv%s_epoch%s.pth' % (cvphase, config.best_epoch)
+        load_path = project_home_dir + 'model/' + pretrained_dir + '/' + pretrained_dir +'_cv%s_epoch%s.pth' % (cvphase, best_epoch)
         
         print('loading the model from %s' % load_path)
         
