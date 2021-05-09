@@ -1,5 +1,3 @@
-import mobilenet_preprocess
-
 print("\nTHYROID DATASET\n")
 import pandas as pd
 from PIL import Image
@@ -26,11 +24,14 @@ import torch
 from torch.utils.data import DataLoader
 from sklearn.utils import resample
 
-def load_datasets_new(args, phase, cv_phase, allimgs, frametype):
+import mobilenet_preprocess
+
+
+def load_datasets_new(project_home_dir, labelpath, phase, cv_phase, allimgs, frametype):
     print("passed in list allimgs:", np.shape(allimgs))
     
     colnames = ['Labels for each frame', 'Annot_IDs', 'size_A', 'size_B', 'size_C', 'location_r_l_', 'study_dttm', 'age', 'sex', 'final_diagnoses', 'ePAD ID', 'foldNum']
-    label_data = pd.read_csv(args.labelpath, names=colnames)
+    label_data = pd.read_csv(labelpath, names=colnames)
     
     annot_ids = label_data.Annot_IDs.tolist() #list of annotation ids from csv file
     labels = label_data.final_diagnoses.tolist() #list of labels from csv file
@@ -111,7 +112,6 @@ def load_datasets_new(args, phase, cv_phase, allimgs, frametype):
     t = 0
     
     print("about to stack!")
-    
     if(frametype == "adjacent"):
         #if 3 images in a row from same patient, stack them (instead of rgb channels)
         while (t < len(cur_imgs)-2):
@@ -135,6 +135,7 @@ def load_datasets_new(args, phase, cv_phase, allimgs, frametype):
                 annot_id = cur_annot_ids[t]
                 #last index of this patient id in the list of ids
                 last_id = len(cur_annot_ids) - cur_annot_ids[::-1].index(annot_id) - 1
+                #print("num in this patient", last_id - t)
                 dist = (last_id - t) // 3
                 distinct_patient_ids.append(cur_annot_ids[t])
                 print("PATIENT", cur_annot_ids[t], "num frames:", last_id-t)
@@ -149,6 +150,7 @@ def load_datasets_new(args, phase, cv_phase, allimgs, frametype):
 
                     cur_frame_num_stack.append(cur_frame_num[t]) #add index of first image in current frame stack within patient to list for order
 
+                    #if(train_labels[t] != train_labels[t+1] or train_labels[t] != train_labels[t+2]):
                     if(cur_labels[t] != cur_labels[t+dist] or cur_labels[t] != cur_labels[t+(2*dist)]):
                         print("inconsistent labels in train group of 3 images!")
                         print("t:", t, "dist:", dist, "last id", last_id, "cur labels:", cur_labels[t], cur_annot_ids[t], cur_labels[t+(2*dist)], cur_annot_ids[t+(2*dist)])
@@ -173,8 +175,8 @@ def load_datasets_new(args, phase, cv_phase, allimgs, frametype):
         cur_imgs_stack, cur_labels_stack, cur_annot_ids_stack, cur_frame_num_stack = zip(*temp)
     
     if (phase == 'train' or phase == 'trainval'):
-        #for class weights (imbalance of classes)
-        neg, pos = np.bincount(cur_labels_stack)#intlabels)
+        #for class weights (address imbalance of classes)
+        neg, pos = np.bincount(cur_labels_stack)
         print("0s", neg, "1s", pos)
         total_lbls = neg + pos
         print(total_lbls == len(cur_labels_stack))
@@ -186,7 +188,6 @@ def load_datasets_new(args, phase, cv_phase, allimgs, frametype):
         weight_for_0 = (1 / neg)*(total_lbls)/2.0 
         weight_for_1 = (1 / pos)*(total_lbls)/2.0
 
-        #class_weight = {0: weight_for_0, 1: weight_for_1}
         class_weight = [weight_for_0, weight_for_1]
         print('Weight for class 0: {:.2f}'.format(weight_for_0))
         print('Weight for class 1: {:.2f}'.format(weight_for_1))
@@ -194,7 +195,7 @@ def load_datasets_new(args, phase, cv_phase, allimgs, frametype):
         samples_weight = np.array([class_weight[int(m)] for m in cur_labels_stack])
         print("in train phase for load_dataset: samples_weight shape =", np.shape(samples_weight))
         
-        f=open(args.project_home_dir + "samplesweight.csv",'w', newline ='\n')
+        f=open(project_home_dir + "samplesweight.csv",'w', newline ='\n')
         count = 0
         for s in zip(samples_weight):
             count += 1
@@ -209,11 +210,11 @@ def load_datasets_new(args, phase, cv_phase, allimgs, frametype):
 
 
 #only max area frame +- 1 frame from each patient
-def load_datasets_single_frame(args, phase, cv_phase, allimgs, largestpatinds):     
+def load_datasets_single_frame(project_home_dir, labelpath, phase, cv_phase, allimgs, largestpatinds):
     print("passed in list allimgs:", np.shape(allimgs))
     
     colnames = ['Labels for each frame', 'Annot_IDs', 'size_A', 'size_B', 'size_C', 'location_r_l_', 'study_dttm', 'age', 'sex', 'final_diagnoses', 'ePAD ID', 'foldNum']
-    label_data = pd.read_csv(args.labelpath, names=colnames)
+    label_data = pd.read_csv(labelpath, names=colnames)
     
     annot_ids = label_data.Annot_IDs.tolist() #list of annotation ids from csv file
     labels = label_data.final_diagnoses.tolist() #list of labels from csv file
@@ -333,7 +334,7 @@ def load_datasets_single_frame(args, phase, cv_phase, allimgs, largestpatinds):
         samples_weight = []
         samples_weight = np.array([class_weight[int(m)] for m in cur_labels_stack])
         print("in train phase for load_dataset: samples_weight shape =", np.shape(samples_weight))
-        f=open(args.project_home_dir + "samplesweight.csv",'w', newline ='\n')
+        f=open(project_home_dir + "samplesweight.csv",'w', newline ='\n')
         count = 0
         for s in zip(samples_weight):
             count += 1
@@ -348,20 +349,20 @@ def load_datasets_single_frame(args, phase, cv_phase, allimgs, largestpatinds):
 
 
 class DatasetThyroid3StackedNew(data.Dataset):
-    def __init__(self, args, phase, cvphase, frametype, transform=None):
+    def __init__(self, imgpath, maskpath, labelpath, project_home_dir, phase, cvphase, frametype, transform=None):
         super(DatasetThyroid3StackedNew, self).__init__()
         
-        h5py.File(args.imgpath).keys()
+        h5py.File(imgpath).keys()
         colnames = ['Labels for each frame', 'Annot_IDs', 'size_A', 'size_B', 'size_C', 'location_r_l_', 'study_dttm', 'age', 'sex', 'final_diagnoses', 'ePAD ID', 'foldNum']
-        imgs, largestpatinds = mobilenet_preprocess.transform_and_crop_largest(h5py.File(args.imgpath)['img'], h5py.File(args.maskpath)['img'], pd.read_csv(args.labelpath, names=colnames).Annot_IDs.tolist())
+        imgs, largestpatinds = mobilenet_preprocess.transform_and_crop_largest(h5py.File(imgpath)['img'], h5py.File(maskpath)['img'], pd.read_csv(labelpath, names=colnames).Annot_IDs.tolist())
 
         self.phase = phase
         
         print("frametype", frametype)
         if(frametype == "singleframe"):
-            self.imgs, self.all_labels, self.all_annot_ids, self.all_frame_nums = load_datasets_single_frame(args, phase, cvphase, imgs, largestpatinds)
+            self.imgs, self.all_labels, self.all_annot_ids, self.all_frame_nums = load_datasets_single_frame(project_home_dir, labelpath, phase, cvphase, imgs, largestpatinds)
         if(frametype == "adjacent" or frametype == "equalspaced"):
-            self.imgs, self.all_labels, self.all_annot_ids, self.all_frame_nums = load_datasets_new(args, phase, cvphase, imgs, frametype)
+            self.imgs, self.all_labels, self.all_annot_ids, self.all_frame_nums = load_datasets_new(project_home_dir, labelpath, phase, cvphase, imgs, frametype)
         print("done reading in images and labels for", phase, "!!!\n\n")
     
         imgs = []
@@ -396,4 +397,4 @@ class DatasetThyroid3StackedNew(data.Dataset):
         return len(self.all_annot_ids)
 
     
-    
+ 
