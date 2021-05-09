@@ -6,53 +6,82 @@ import random
 import argparse
 import time
 
-#importing files now
-import config #config.py
-import parsing_file #either do "from __ import functionname" and just use functionname, or "import ___" and then do ___.functionname
-parser = parsing_file.create_parser() 
+import configparser
+import ast
+import yaml
+
+def configwrite(varname, value): #for yaml
+    with open(r'configtest.yaml') as file:
+        dictloaded = yaml.load(file, Loader=yaml.FullLoader)
+        
+    dictloaded[varname] = value
+
+    with open(r'configtest.yaml', 'w') as file: #add on, not override
+        documents = yaml.dump(dictloaded, file)
+        
+    return configread() #return updated dictionary after writing
+
+
+def configread():
+    with open(r'configtest.yaml') as file:
+        dictloaded = yaml.load(file, Loader=yaml.FullLoader)
+    return dictloaded
+
+dictloaded = configread()
+for key, value in dictloaded.items():
+    print (key + " : " + str(value))
+print("\n\ncheck: lr", dictloaded['lr'])    
+
+
+parser = argparse.ArgumentParser(description="Thyroid CNN Project Pytorch Model Code")
+parser.add_argument("--model_dir", type=str, default='_thyroid_weighted_focal_extralinear_3rowstack_trainonly', help="folder to save your trained model") #set in function
+parser.add_argument("--pretrained_dir", type=str, help="folder to save pretrained model weights for setup_model function")
+parser.add_argument("--imgpath", type=str, default="/path/to/imgs.hdf5", help="path to img hdf5 file")  #CHANGE if required
+parser.add_argument("--maskpath", type=str, default="/path/to/masks.hdf5", help="path to mask hdf5 file")  #CHANGE if required
+parser.add_argument("--labelpath", type=str, default="/path/to/labels.csv", help="path to labels csv file") #CHANGE if required
+parser.add_argument("--project_home_dir", type=str, default="/your/home/dir/", help="home project directory") #CHANGE
 args = parser.parse_args("")
 print("Home directory argument in my code:{}".format(args.project_home_dir))
 
-from mobilenet_dataset import *
 
-from cnn_data_augmentations import * #augmentations are not functions so not sure what this is doing
+#importing files now
+from mobilenet_dataset import *
+from cnn_data_augmentations import *
 import train_cnn #train_model (for cnn)
 import test_cnn #test_model
 from analyze_model_outputs import * #analyze_test_outputs, plot_test_stats, calc_test_stats, bootstrap_auc
 
+
+
 def main():
-    print(config.phase, "config.phase from config file")
-    config.phase = "test"
-    print(config.phase, "config.phase from config file")
-    config.phase = "train"
-    print(config.phase, "config.phase from config file")
+    config = configread()
+    config = configwrite('phase', "train")
+    print(config['phase'], "phase from config file")
     
-    #test out dataset functions (don't need if calling in dataloader)
-    h5py.File(args.imgpath).keys()
-    colnames = ['Labels for each frame', 'Annot_IDs', 'size_A', 'size_B', 'size_C', 'location_r_l_', 'study_dttm', 'age', 'sex', 'final_diagnoses', 'ePAD ID', 'foldNum']
-    
-
     #first round training
-    config.trainval = False #use 3/5 of data for train, with val
-    config.best_epoch = train_cnn.train_model(args)
-
+    config = configwrite('trainval', False)
+    bestepoch = train_cnn.train_model(args.imgpath, args.maskpath, args.labelpath, args.project_home_dir)
+    config = configwrite('best_epoch', bestepoch)
+    
     #second round training (4/5 of data)
-    config.trainval = True #use 4/5 of data for train, no val
-    print(config.best_epoch)
-    print("config num epochs", config.num_epochs)
-    realtrain = train_cnn.train_model(args) #ignore this returned epoch
+    config = configwrite('trainval', True) #use 4/5 of data for train, no val
+    print(config['best_epoch'])
+    print("config num epochs", config['num_epochs'])
+    
+    realtrain = train_cnn.train_model(args.imgpath, args.maskpath, args.labelpath, args.project_home_dir) #ignore this returned epoch
     print("\n\n4/5 data model done training!!!")
-    print("config num epochs after trainval", config.num_epochs) #should be modified during trainval
+    #print("config num epochs after trainval", config['num_epochs']) #modified to best_epochs+2 during trainval
 
     #load test data
-    savedepochs = [72, 60, 88, 94, 61] #already knew saved best_epochs so using these, otherwise use config.best_epoch from train phase
-    config.best_epoch = savedepochs[config.cvphase]
-    print(config.best_epoch, "\nTEST: cv phase", config.cvphase)
-    test_cnn.test_model(args, config.best_epoch)
+    #epochs = [72, 60, 88, 94, 61] #if you have presaved the best epochs
+    #config = configwrite('best_epoch', epochs[config['cvphase']])
+    print('Best epoch from training:', config['best_epoch'], "\nTEST: CV phase", config['cvphase'])
+    test_cnn.test_model(args.imgpath, args.maskpath, args.labelpath, args.project_home_dir, config['best_epoch'])
 
     #analyze test outputs
-    testsaveallfile = "cnn_test_all_outs" + str(config.cvphase) + ".csv"
+    testsaveallfile = "cnn_test_all_outs" + str(config['cvphase']) + ".csv"
     analyze_test_outputs(testsaveallfile, "cnn")
+
 
     
 if __name__ == "__main__":
