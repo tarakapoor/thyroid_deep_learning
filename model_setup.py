@@ -48,5 +48,3 @@ def save_networks(net, epoch, cvphase, model_path, model_dir):
     save_file_name = save_path + model_dir + '_cv%s_epoch%s.pth' % (cvphase, epoch)
     print("model save path:", save_file_name)
     torch.save(net.state_dict(), save_file_name)
-    
-print("done with save functions!")
