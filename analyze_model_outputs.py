@@ -134,7 +134,6 @@ def calc_test_stats(distinct_patients, patientlabels, patient_ave_preds):
 
     
 
-#run after testing full model
 def analyze_test_outputs(savefilename, modeltype): #modeltype cnn or transformer
     config = configread()
 
@@ -163,7 +162,6 @@ def analyze_test_outputs(savefilename, modeltype): #modeltype cnn or transformer
     test_all_probs_ones.pop(0)
     test_all_labels = np.array(test_all_labels, dtype=np.float32)
     test_all_probs_ones = np.array(test_all_probs_ones, dtype=np.float32)
-
 
     testpatients = []
     for p in range(len(test_all_patients)):
