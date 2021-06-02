@@ -1,7 +1,7 @@
 from cnn_data_augmentations import *
 import mobilenet_dataset
 import model_setup #has setup_model and save_networks functions
-from main import configwrite, configread
+from cnn_main import configwrite, configread
 import analyze_model_outputs
 
 import numpy as np
