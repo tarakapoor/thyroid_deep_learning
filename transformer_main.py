@@ -52,7 +52,7 @@ import train_transformer #train_transformer (for transformer)
 import test_transformer #test_transformer
 import analyze_model_outputs #analyze_test_outputs, plot_test_stats, calc_test_stats, bootstrap_auc
 
-from main import configread, configwrite
+from cnn_main import configread, configwrite
 
 import cnn_feature_extraction
 
