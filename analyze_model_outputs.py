@@ -16,7 +16,7 @@ from numpy import sqrt
 from numpy import argmax
 
 #import config #config.py
-from main import configread, configwrite
+from cnn_main import configread, configwrite
 from transformer_main import transfconfigread, transfconfigwrite
 
 def plot_test_stats(losses, f_losses, losses_val, f_losses_val, epoch_aurocs, patientlabels, patient_ave_preds, modeltype):
