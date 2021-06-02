@@ -2,7 +2,7 @@ from mobilenet_dataset import *
 import model_setup #has setup_model and save_networks functions
 from cnn_data_augmentations import *
 
-from main import configwrite, configread
+from cnn_main import configwrite, configread
 
 import numpy as np
 import os
