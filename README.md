@@ -19,5 +19,5 @@ OS: Debian GNU/Linux 10
 CUDA Version 11.0
 Pytorch 1.6.0
 
-additional libraries:
+Additional libraries:
 - albumentations
