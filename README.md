@@ -1,6 +1,6 @@
 # thyroid_deep_learning
 
-How to run:
+**HOW TO RUN**
 
 Edit the parser arguments in cnn_main.py and transformer_main.py with your own home directory and paths to images, labels and masks.
 
