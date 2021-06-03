@@ -1,0 +1,21 @@
+Create conda environment with the following:
+
+albumentations
+argparse
+cv2
+csv
+glob
+h5py
+math
+matplotlib
+numpy
+operator
+os
+pandas
+pathlib
+PIL
+random
+re
+sklearn
+tables
+time
