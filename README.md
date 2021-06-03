@@ -9,6 +9,7 @@ cnn_main.py: Run this file to train and test CNN (Mobilenet-v2) model and output
 transformer_main.py: Run this file to train and test Transformer model. It runs CNN model using the lowest validation loss pretrained epoch (saved to configtest.yaml) to extract features, then trains and tests Transformer model with extracted features and outputs overall model predictions to transformer_test_all_outs[cvphase].csv
 
 **SETUP**
+
 HARDWARE: (used to develop models)
 GPU Tesla T4
 CPU Intel Xeon model 79 ???
