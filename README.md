@@ -37,6 +37,7 @@ cnn_main.py
 Run entire data preprocessing, training and testing of CNN model and output of model predictions to cnn_test_all_outs[cvphase].csv
 
 
+--------
 
 cnn_feature_extraction.py
 Create function to load (from lowest validation loss epoch, saved to configtest.yaml file) and run trained CNN model (exclude final classification layer) on train, validation and test data to extract feature vectors to feed into Transformer model. 
@@ -59,6 +60,7 @@ analyze_model_outputs.py
 Functions calc_test_stats and plot_test_stats.
 Function analyze_test_outputs for calculating AUROC and other stats and saving model outputs to csv files.
 
+--------
 **HOW TO RUN**
 
 Edit the parser arguments in cnn_main.py and transformer_main.py with your own home directory and paths to images, labels and masks.
@@ -67,6 +69,7 @@ cnn_main.py: Run this file to train and test CNN (Mobilenet-v2) model and output
 
 transformer_main.py: Run this file to train and test Transformer model (on extracted CNN features) and output CNN+Transformer model predictions to transformer_test_all_outs[cvphase].csv
 
+--------
 **SETUP**
 
 HARDWARE: (used to develop models)
