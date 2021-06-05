@@ -72,14 +72,14 @@ transformer_main.py: Run this file to train and test Transformer model (on extra
 --------
 **SETUP**
 
-HARDWARE: (used to develop models)
+HARDWARE: (used in this project to develop models)
 GPU Tesla T4
-CPU Intel Xeon model 79 ???
 
 SOFTWARE (python package requirements are listed in requirements.txt):
 OS: Debian GNU/Linux 10
 CUDA Version 11.0
 Pytorch 1.6.0
+Python 3.8.6
 
 Additional libraries:
 - albumentations
