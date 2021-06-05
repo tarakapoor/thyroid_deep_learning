@@ -65,7 +65,7 @@ Edit the parser arguments in cnn_main.py and transformer_main.py with your own h
 
 cnn_main.py: Run this file to train and test CNN (Mobilenet-v2) model and output CNN model predictions to cnn_test_all_outs[cvphase].csv
 
-transformer_main.py: Run this file to train and test Transformer model.
+transformer_main.py: Run this file to train and test Transformer model (on extracted CNN features) and output CNN+Transformer model predictions to transformer_test_all_outs[cvphase].csv
 
 **SETUP**
 
