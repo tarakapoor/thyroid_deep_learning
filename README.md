@@ -76,6 +76,7 @@ HARDWARE: (used in this project to develop models)
 
 GPU Tesla T4
 
+
 SOFTWARE (python package requirements are listed in requirements.txt):
 
 OS: Debian GNU/Linux 10
