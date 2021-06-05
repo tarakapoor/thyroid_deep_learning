@@ -1,6 +1,7 @@
 # CNN+Transformer Model
 
 **ABOUT**
+
 The CNN+Transformer architecture consists of a MobileNetv2 convolutional neural network (CNN) for feature extraction concatenated with a bi-layer Transformer-Encoder network.
 
 ![figure2](https://user-images.githubusercontent.com/44348827/120879105-f825bb80-c575-11eb-935d-330fbcb9f16a.png)
