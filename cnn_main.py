@@ -50,11 +50,9 @@ args = parser.parse_args("")
 print("Home directory argument in my code:{}".format(args.project_home_dir))
 
 
-
 import train_cnn #train_model (for cnn)
 import test_cnn #test_model
 from analyze_model_outputs import analyze_test_outputs #also plot_test_stats, calc_test_stats, bootstrap_auc
-
 
 
 def main():
