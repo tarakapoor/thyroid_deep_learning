@@ -23,11 +23,10 @@ def setup_model(net, phase, cvphase, model_dir, pretrained_dir, project_home_dir
     
     if phase == 'test':
         load_path = project_home_dir + 'model/' + pretrained_dir + '/' + pretrained_dir +'_cv%s_epoch%s.pth' % (cvphase, best_epoch)
-        
         print('loading the model from %s' % load_path)
         
         #for cnn
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") #use gpu if possible
         pretrained_state_dict = torch.load(load_path, map_location=str(device))
         
         try:

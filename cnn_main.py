@@ -76,7 +76,7 @@ def main():
     print("config num epochs after trainval", config['num_epochs']) #should be modified during trainval
 
     #load test data
-    #epochs = [72, 60, 88, 94, 61] #if you have presaved best epochs
+    #epochs = [72, 60, 88, 94, 61] #update if you have presaved best epochs
     #config = configwrite('best_epoch', epochs[config['cvphase']])
     print('Best epoch from training:', config['best_epoch'], "\nTEST: CV phase", config['cvphase'])
     test_cnn.test_model(args.imgpath, args.maskpath, args.labelpath, args.project_home_dir, config['best_epoch'])

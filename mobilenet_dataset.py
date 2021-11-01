@@ -121,12 +121,12 @@ def load_datasets_new(project_home_dir, labelpath, phase, cv_phase, allimgs, fra
     print("about to stack!")
     
     if(frametype == "adjacent"):
-        #if 3 images in a row from same patient, stack them (instead of rgb channels)
+        #ADJACENT frame stacking method
+        #if 3 images in a row (adjacent) from same patient, stack them (instead of rgb channels)
         while (t < len(cur_imgs)-2):
             if(cur_annot_ids[t] not in distinct_patient_ids):
                 distinct_patient_ids.append(cur_annot_ids[t])
             if(cur_annot_ids[t] == cur_annot_ids[t+1] and cur_annot_ids[t] == cur_annot_ids[t+2]):
-                #img = np.stack((train_imgs[t], train_imgs[t+1], train_imgs[t+2]))
                 img = np.stack((cur_imgs[t], cur_imgs[t+1], cur_imgs[t+2]))
                 cur_imgs_stack.append(img)
                 cur_labels_stack.append(cur_labels[t])
@@ -134,10 +134,10 @@ def load_datasets_new(project_home_dir, labelpath, phase, cv_phase, allimgs, fra
                 cur_frame_num_stack.append(cur_frame_num[t]) #add index of first image in current frame stack within patient to list for order
                 if(cur_labels[t] != cur_labels[t+1] or cur_labels[t] != cur_labels[t+2]):
                     print("inconsistent labels in train group of 3 images!")
-            t += 3 #everyone needs t + 1 to go to next frame   
+            t += 3 #every option needs t + 1 to go to next frame   
    
     else:
-        #EQUAL SPACED method
+        #EQUAL SPACED frame stacking method
         while (t < len(cur_imgs) - (2*dist)):
             if(cur_annot_ids[t] not in distinct_patient_ids):
                 annot_id = cur_annot_ids[t]
@@ -163,14 +163,14 @@ def load_datasets_new(project_home_dir, labelpath, phase, cv_phase, allimgs, fra
             else: #end of patient?
                 g = 0
                 if(cur_annot_ids[t] != cur_annot_ids[t + (2*dist) + 1]):
-                    t += (2*dist)#go to next patient!
+                    t += (2*dist) #go to next patient!
                 else:
                     print("not at end of patient?")
                     while(cur_annot_ids[t] == cur_annot_ids[t + (2*dist) + 1 + g]):
                         g += 1
                     print("final difference:", g)
                     t += (2*dist) + g
-            t += 1 #everyone needs t + 1 to go to next frame
+            t += 1 #every option needs t + 1 to go to next frame
             
     print("\n\nnum patients:", len(distinct_patient_ids))
     print("done stacking!")
@@ -196,8 +196,7 @@ def load_datasets_new(project_home_dir, labelpath, phase, cv_phase, allimgs, fra
 
         #class_weight = {0: weight_for_0, 1: weight_for_1}
         class_weight = [weight_for_0, weight_for_1]
-        print('Weight for class 0: {:.2f}'.format(weight_for_0))
-        print('Weight for class 1: {:.2f}'.format(weight_for_1))
+        print('Weight for class 0: {:.2f}\nWeight for class 1: {:.2f}'.format(weight_for_0, weight_for_1))
         samples_weight = []
         samples_weight = np.array([class_weight[int(m)] for m in cur_labels_stack])
         print("in train phase for load_dataset: samples_weight shape =", np.shape(samples_weight))
@@ -301,7 +300,7 @@ def load_datasets_single_frame(project_home_dir, labelpath, phase, cv_phase, all
     cur_imgs_stack = []
     cur_labels_stack = []
     cur_annot_ids_stack = []
-    #label frame number of each image
+    #label frame number of each image (for future ordering)
     cur_frame_num = []
     
     distinct_patient_ids = []
