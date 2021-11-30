@@ -14,10 +14,9 @@ def crop_bounding_box(img, mask):
 
     ret,thresh = cv2.threshold(mask, 127, 255, 0)
     contours, hierarchy = cv2.findContours(thresh, 1, 2)
+    #cnt = contours[0]
 
-    cnt = contours[0]
-
-    #find coordinates to crop
+    #find coordinates to crop around mask
     (y, x) = np.where(thresh == 255)
     (topy, topx) = (np.min(y), np.min(x))
     (bottomy, bottomx) = (np.max(y), np.max(x))

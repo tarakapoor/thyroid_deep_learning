@@ -28,7 +28,7 @@ from sklearn.utils import resample
 import mobilenet_preprocess
 
 def load_datasets_new(project_home_dir, labelpath, phase, cv_phase, allimgs, frametype):
-    """Load images and labels for given phase and cvphase, stack based on frametype.
+    """Load images and labels for given phase and cvphase, stack 3 different frames based on frametype (adjacent, equally spaced).
     Keyword arguments:
     phase -- train, val, trainval or test (which data to use)
     cv_phase -- cross validation fold (0 to 4)

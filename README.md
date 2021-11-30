@@ -18,12 +18,12 @@ Contains pre-set variables for Transformer model development (e.g. learning rate
 --------
 **mobilenet_preprocess.py:**
 
-Contains functions (crop_bounding_box, transform_and_crop_new, transform_and_crop_largest) for image preprocessing: cropping images around masks and resizing to 224x224.
+Contains functions (crop_bounding_box, transform_and_crop_new, transform_and_crop_largest) for cine-clip video frame preprocessing: cropping images around masks (covering nodule) with 5 pixel buffer and resizing to 224x224.
 
 **mobilenet_dataset.py:**
 
 Create CNN model dataset. Function load_datasets_new for loading CNN inputs: sorting images into cross validation folds and stacking 3 images at a time into input instances along with corresponding labels and patient IDs.
-DataLoader (DatasetThyroid3StackedNew class) calls functions from **mobilenet_preprocess** file to load images, then feeds them into load_datasets_new or load_datasets_single_frame function to get CNN inputs.
+DataLoader (DatasetThyroid3StackedNew custom class) calls functions from **mobilenet_preprocess** file to load images, then feeds them into load_datasets_new (use all frames) or load_datasets_single_frame (stack each patient's largest frame +-1) function to get CNN inputs.
 
 **train_cnn.py:**
 
@@ -78,7 +78,7 @@ Function analyze_test_outputs for calculating AUROC and other stats and saving m
 
 Edit the parser arguments in cnn_main.py and transformer_main.py with your own home directory and paths to images, labels and masks.
 
-cnn_main.py: Run this file to train and test CNN (Mobilenet-v2) model and output CNN model predictions to cnn_test_all_outs[cvphase].csv
+cnn_main.py: Run this file to train and test CNN (MobileNet-v2) model and output CNN model predictions to cnn_test_all_outs[cvphase].csv
 
 transformer_main.py: Run this file to train and test Transformer model (on extracted CNN features) and output CNN+Transformer model predictions to transformer_test_all_outs[cvphase].csv
 
