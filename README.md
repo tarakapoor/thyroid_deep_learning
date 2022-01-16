@@ -1,5 +1,8 @@
 # CNN+Transformer Model
 
+**NOTE:**
+The content of this code repository is for research purposes only and is not intended for clinical use of any kind, including but not limited to diagnosis or prognosis.
+
 **ABOUT**
 
 The CNN+Transformer architecture consists of a MobileNetv2 convolutional neural network (CNN) for feature extraction concatenated with a bi-layer Transformer-Encoder network.
