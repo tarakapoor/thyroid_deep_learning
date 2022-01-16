@@ -1,7 +1,9 @@
 # CNN+Transformer Model
 
 **NOTE:**
+
 The content of this code repository is for research purposes only and is not intended for clinical use of any kind, including but not limited to diagnosis or prognosis.
+
 
 **ABOUT**
 
